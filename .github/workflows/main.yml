@@ -8,9 +8,12 @@ on:
         required: true
         default: 'v11.1.0'
 
+permissions:
+  contents: write # Required for GitHub Actions to create and publish a release
+
 jobs:
   build:
-    runs-on: macos-26 # Upgraded to support modern macOS SDKs and Liquid Glass compilation
+    runs-on: macos-26
 
     steps:
       - name: Checkout Code
@@ -38,8 +41,12 @@ jobs:
           cd Build/Build/Products/Release
           zip -r AltTab.zip AltTab.app
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: AltTab-${{ github.event.inputs.version_tag }}
-          path: Build/Build/Products/Release/AltTab.zip
+          tag_name: "release-${{ github.event.inputs.version_tag }}"
+          name: "AltTab ${{ github.event.inputs.version_tag }} (Custom Build)"
+          body: "Custom build of AltTab compiled using GitHub Actions. Pre-compiled for personal use."
+          draft: false
+          prerelease: false
+          files: Build/Build/Products/Release/AltTab.zip
