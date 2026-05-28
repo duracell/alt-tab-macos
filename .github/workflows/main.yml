@@ -1,4 +1,4 @@
-name: Build AltTab (Select Version)
+name: Build AltTab (Optimized Build)
 
 on:
   workflow_dispatch:
@@ -7,9 +7,13 @@ on:
         description: 'Tag or branch to compile (e.g., v11.1.0, v10.12.0, master)'
         required: true
         default: 'v11.1.0'
+      architecture:
+        description: 'Target architecture (arm64 for Apple Silicon, x86_64 for Intel, or empty for Universal)'
+        required: false
+        default: 'arm64'
 
 permissions:
-  contents: write # Required to publish a release
+  contents: write
 
 jobs:
   build:
@@ -21,30 +25,50 @@ jobs:
         with:
           ref: ${{ github.event.inputs.version_tag }}
 
+      - name: Replace Version Placeholder
+        run: |
+          # Clean version tag (strip 'v' if present, e.g., v10.12.0 -> 10.12.0)
+          VERSION=$(echo "${{ github.event.inputs.version_tag }}" | sed 's/^v//')
+          echo "Setting version to: $VERSION"
+          
+          # Replace placeholder inside Info.plist if it exists
+          if [ -f "Info.plist" ]; then
+            sed -i '' "s/#VERSION#/${VERSION}/g" Info.plist
+          fi
+
       - name: Resolve Dependencies
         run: |
           if [ -f "Podfile" ]; then
             echo "CocoaPods detected. Installing dependencies..."
             pod install
-            # Set environment variable to build the workspace
             echo "BUILD_TARGET=-workspace alt-tab-macos.xcworkspace" >> $GITHUB_ENV
           else
             echo "No Podfile detected. Resolving Swift Package Manager dependencies..."
             xcodebuild -resolvePackageDependencies
-            # Set environment variable to build the project file directly
             echo "BUILD_TARGET=-project alt-tab-macos.xcodeproj" >> $GITHUB_ENV
           fi
 
       - name: Compile macOS App
         run: |
+          # Determine architecture flag
+          ARCH_FLAG=""
+          if [ -n "${{ github.event.inputs.architecture }}" ]; then
+            ARCH_FLAG="-arch ${{ github.event.inputs.architecture }}"
+          fi
+          
+          echo "Building with flags: $ARCH_FLAG"
+          
           xcodebuild $BUILD_TARGET \
                      -scheme "Release" \
                      -configuration Release \
                      -derivedDataPath Build/ \
                      -sdk macosx \
+                     $ARCH_FLAG \
                      CODE_SIGN_IDENTITY="-" \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGNING_ALLOWED=YES
+                     CODE_SIGNING_ALLOWED=YES \
+                     DEPLOYMENT_POSTPROCESSING=YES \
+                     STRIP_INSTALLED_PRODUCT=YES
 
       - name: Compress App to ZIP
         run: |
@@ -56,7 +80,7 @@ jobs:
         with:
           tag_name: "release-${{ github.event.inputs.version_tag }}"
           name: "AltTab ${{ github.event.inputs.version_tag }} (Custom Build)"
-          body: "Custom build of AltTab compiled using GitHub Actions. Pre-compiled for personal use."
+          body: ""
           draft: false
           prerelease: false
           files: Build/Build/Products/Release/AltTab.zip
