@@ -25,7 +25,7 @@ jobs:
       - name: Compile macOS App
         run: |
           xcodebuild -workspace alt-tab-macos.xcworkspace \
-                     -scheme "AltTab" \
+                     -scheme "Release" \
                      -configuration Release \
                      -derivedDataPath Build/ \
                      -sdk macosx \
