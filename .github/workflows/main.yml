@@ -50,25 +50,33 @@ jobs:
 
       - name: Compile macOS App
         run: |
-          # Determine architecture flag
-          ARCH_FLAG=""
-          if [ -n "${{ github.event.inputs.architecture }}" ]; then
-            ARCH_FLAG="-arch ${{ github.event.inputs.architecture }}"
-          fi
-          
-          echo "Building with flags: $ARCH_FLAG"
-          
-          xcodebuild $BUILD_TARGET \
-                     -scheme "Release" \
-                     -configuration Release \
-                     -derivedDataPath Build/ \
-                     -sdk macosx \
-                     $ARCH_FLAG \
-                     CODE_SIGN_IDENTITY="-" \
-                     CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGNING_ALLOWED=YES \
-                     DEPLOYMENT_POSTPROCESSING=YES \
-                     STRIP_INSTALLED_PRODUCT=YES
+                # Determine architecture flag
+                ARCH_FLAG=""
+                if [ -n "${{ github.event.inputs.architecture }}" ]; then
+                  ARCH_FLAG="-arch ${{ github.event.inputs.architecture }}"
+                fi
+                
+                echo "Building with flags: $ARCH_FLAG"
+                
+                xcodebuild $BUILD_TARGET \
+                           -scheme "Release" \
+                           -configuration Release \
+                           -derivedDataPath Build/ \
+                           -sdk macosx \
+                           $ARCH_FLAG \
+                           CODE_SIGN_IDENTITY="-" \
+                           CODE_SIGNING_REQUIRED=NO \
+                           CODE_SIGNING_ALLOWED=YES \
+                           DEPLOYMENT_POSTPROCESSING=YES \
+                           STRIP_INSTALLED_PRODUCT=YES \
+                           STRIP_STYLE="all" \
+                           DEAD_CODE_STRIPPING=YES \
+                           COPY_PHASE_STRIP=YES \
+                           GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
+                           LLVM_LTO=YES \
+                           SWIFT_COMPILATION_MODE=wholemodule \
+                           ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO \
+                           COMPRESS_PNG_FILES=YES
 
       - name: Compress App to ZIP
         run: |
