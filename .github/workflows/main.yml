@@ -1,0 +1,45 @@
+name: Build AltTab (Select Version)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Tag or branch to compile (e.g., v11.1.0, v10.12.0, master)'
+        required: true
+        default: 'v11.1.0'
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version_tag }}
+
+      - name: Install CocoaPods Dependencies
+        run: |
+          pod install
+
+      - name: Compile macOS App
+        run: |
+          xcodebuild -workspace alt-tab-macos.xcworkspace \
+                     -scheme "AltTab" \
+                     -configuration Release \
+                     -derivedDataPath Build/ \
+                     -sdk macosx \
+                     CODE_SIGN_IDENTITY="-" \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGNING_ALLOWED=YES
+
+      - name: Compress App to ZIP
+        run: |
+          cd Build/Build/Products/Release
+          zip -r AltTab.zip AltTab.app
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AltTab-${{ github.event.inputs.version_tag }}
+          path: Build/Build/Products/Release/AltTab.zip
