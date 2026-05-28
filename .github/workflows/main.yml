@@ -70,8 +70,6 @@ jobs:
                            DEPLOYMENT_POSTPROCESSING=YES \
                            STRIP_INSTALLED_PRODUCT=YES \
                            STRIP_STYLE="all" \
-                           DEAD_CODE_STRIPPING=YES \
-                           COPY_PHASE_STRIP=YES \
                            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
                            LLVM_LTO=YES \
                            SWIFT_COMPILATION_MODE=wholemodule \
