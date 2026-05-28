@@ -9,7 +9,7 @@ on:
         default: 'v11.1.0'
 
 permissions:
-  contents: write # Required for GitHub Actions to create and publish a release
+  contents: write # Required to publish a release
 
 jobs:
   build:
@@ -21,13 +21,23 @@ jobs:
         with:
           ref: ${{ github.event.inputs.version_tag }}
 
-      - name: Install CocoaPods Dependencies
+      - name: Resolve Dependencies
         run: |
-          pod install
+          if [ -f "Podfile" ]; then
+            echo "CocoaPods detected. Installing dependencies..."
+            pod install
+            # Set environment variable to build the workspace
+            echo "BUILD_TARGET=-workspace alt-tab-macos.xcworkspace" >> $GITHUB_ENV
+          else
+            echo "No Podfile detected. Resolving Swift Package Manager dependencies..."
+            xcodebuild -resolvePackageDependencies
+            # Set environment variable to build the project file directly
+            echo "BUILD_TARGET=-project alt-tab-macos.xcodeproj" >> $GITHUB_ENV
+          fi
 
       - name: Compile macOS App
         run: |
-          xcodebuild -workspace alt-tab-macos.xcworkspace \
+          xcodebuild $BUILD_TARGET \
                      -scheme "Release" \
                      -configuration Release \
                      -derivedDataPath Build/ \
