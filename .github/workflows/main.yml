@@ -69,7 +69,6 @@ jobs:
                            CODE_SIGNING_ALLOWED=YES \
                            DEPLOYMENT_POSTPROCESSING=YES \
                            STRIP_INSTALLED_PRODUCT=YES \
-                           STRIP_STYLE="all" \
                            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
                            LLVM_LTO=YES \
                            SWIFT_COMPILATION_MODE=wholemodule \
