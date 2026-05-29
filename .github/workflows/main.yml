@@ -78,7 +78,7 @@ jobs:
       - name: Compress App to ZIP
         run: |
           cd Build/Build/Products/Release
-          zip -ry AltTab.zip AltTab.app
+          ditto -c -k --keepParent AltTab.app AltTab.zip
           
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
